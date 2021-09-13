@@ -1,0 +1,35 @@
+{% macro stats_panel(panel_title, icon="chart-bar") %}
+    <!-- stats: {{ panel_title }} -->
+    <div class="col-md-12 col-lg-6 col-xl-4 mb-4 px-2">
+        <div class="card p-1 bg-light rounded border-0 h-100">
+            <div class="card-body bg-light">
+                <h5 class="card-title mb-3"><i class="fas fa-{{ icon }}"></i> {{ panel_title }}</h5>
+                {{ caller() }}
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro stats_table_row(label, value, percent=False, link=None, tooltip=None) %}
+    <tr>
+        <td style="text-align: left; padding:5px"
+            {%- if link %} onclick="location.href='{{ link }}'"{% endif -%}
+            {%- if tooltip %} data-toggle="tooltip" title="{{ tooltip }}"{% endif -%}
+        >
+            {{ label }}
+        </td>
+        <td style="text-align: right; padding:5px">{{ value }}{% if percent %}%{% endif %}</td>
+    </tr>
+{%- endmacro %}
+
+{% macro upload_input(key, label, error, additional_classes='') %}
+    <label class="control-label" for="{{ key }}">{{ label }}:</label>
+    <div class="form-group">
+        <div class="{% if key in error.keys() %}has-error {% endif %}{{ additional_classes }}">
+            {{ caller() }}
+            {% if key in error.keys() %}
+                <span class="help-block">{{ error[key] }}</span>
+            {% endif %}
+        </div>
+    </div>
+{%- endmacro %}

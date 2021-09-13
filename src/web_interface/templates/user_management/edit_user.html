@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% set active_page = "Admin" %}
+
+
+{% block body %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 mt-4">
+        <h3 class="mb-3">Manage user {{ user.email }}</h3>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <table class="table table-bordered">
+            <tr>
+                <th width="120px" style="text-align: right;">Username</th>
+                <td>{{ user.email }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: right;">ID</th>
+                <td>{{ user.id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: right;">API Key</th>
+                <td>{{ user.api_key }}</td>
+            </tr>
+
+            <!-- user roles -->
+            <tr>
+                <th class="d-flex justify-content-between align-items-center align-middle border-0">
+                    <a href="#" data-toggle="modal" data-target="#user_role_help_modal" style="width: 100%">
+                        <span class="fas fa-info-circle" data-toggle="tooltip" title="show role definitions"></span>
+                    </a>
+                    Roles
+                </th>
+                <td>
+                    <ul class="list-group list-group-flush">
+                        {% for role in user.roles %}
+                            <li class="list-group-item">{{ role.name | replace_underscore }}</li>
+                        {% endfor %}
+                    </ul>
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#change_user_roles_modal" style="width: 100%">
+                        Edit Roles
+                    </button>
+                </td>
+            </tr>
+        </table>
+
+        <!-- change user roles modal -->
+        <div id="change_user_roles_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title">Select User roles</h5>
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form method="post">
+                            <div class="form-group">
+                                {% for role in available_roles %}
+                                    <div class="custom-control custom-switch" id="user_roles">
+                                        <input type="checkbox" class="custom-control-input" id="{{ role }}" value="{{ role }}" name="input_roles"
+                                               {% if role in user.roles %} checked {% endif %}>
+                                        <label class="custom-control-label" for="{{ role }}">{{ role | replace_underscore }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="btn btn-primary btn-sm" type="submit" style="width: 100%" id="input_roles" value=submit>
+                                Submit
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- role help -->
+        <div id="user_role_help_modal" class="modal" role="dialog" data-backdrop="false">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title">User roles</h5>
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    </div>
+
+                    <div class="modal-body p-0">
+                        <table class="table table-bordered table-striped mb-0">
+                            <tr>
+                                <th></th>
+                                {% for role in available_roles | sort_roles %}
+                                    <th style="text-align: center;">
+                                        {{ role | replace_underscore }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                            {% for privilege in privileges | sort_privileges %}
+                                <tr>
+                                    <th style="text-align: right">{{ privilege | replace_underscore }}</th>
+                                    {% for role in available_roles | sort_roles %}
+                                        <td class="align-middle" style="text-align: center;">
+                                            {% if role in privileges[privilege] %}
+                                                <i class="fas fa-check text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-times text-danger"></i>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row justify-content-center">
+    <div class="col-md-4 mt-4 mb-2">
+        <button data-toggle="collapse" data-target="#delete-button-div" class="btn btn-primary" style="width: 100%">
+            <i class="fas fa-trash-alt"></i> Delete user
+        </button>
+        <div class="collapse" id="delete-button-div">
+            <button class="btn btn-danger" type="button" onclick='window.location.href = "/admin/delete_user/{{ user.email }}";' style="width: 100%">
+                <i class="fas fa-check"></i> Are you sure?
+            </button>
+        </div>
+    </div>
+
+<!-- admin change user password -->
+    <div class="col-md-4 mt-4 mb-2">
+
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_change_password_modal" style="width: 100%">
+            <i class="fas fa-key"></i> Change password
+        </button>
+
+        <div id="admin_change_password_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title">Change user password</h5>
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form method="post">
+
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                </div>
+                                <input id="admin_change_password" type="password" class="form-control" name="admin_change_password" placeholder="new password" required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                </div>
+                                <input id="admin_confirm_password" type="password" class="form-control" name="admin_confirm_password" placeholder="confirm password" required>
+                            </div>
+
+                            <button class="btn btn-primary" type="submit" id="admin_change_password_button" value="admin_change_password">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
