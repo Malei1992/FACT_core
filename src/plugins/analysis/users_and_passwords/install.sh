@@ -5,7 +5,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )" || exit 1
 echo "------------------------------------"
 echo "     install password cracker       "
 echo "------------------------------------"
-
+:<<!
 sudo -EH pip3 install --upgrade git+https://github.com/fkie-cad/common_helper_passwords.git || exit 1
 
 mkdir -p bin/john/
@@ -44,7 +44,7 @@ fi
     cd src/
     sudo ./configure -disable-openmp && make -s clean && make -sj4
 ) || exit 1
-
+!
 # Add common credentials
 (
 	cd internal

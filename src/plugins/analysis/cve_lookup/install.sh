@@ -6,7 +6,7 @@ echo "------------------------------------"
 echo "   install cve lookup dependencies  "
 echo "------------------------------------"
 
-sudo -EH pip3 install pyxdameraulevenshtein retry || exit 1
+#sudo -EH pip3 install pyxdameraulevenshtein retry || exit 1
 
 #
 # setup_repository.py can be called with arguments specified by the user (call setup_repository.py -h for more info)

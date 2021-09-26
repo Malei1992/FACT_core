@@ -1,3 +1,4 @@
+import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from configparser import ConfigParser
@@ -39,7 +40,6 @@ class AnalysisScheduler:  # pylint: disable=too-many-instance-attributes
         self.manager = Manager()
         self.currently_running = self.manager.dict()
         self.recently_finished = self.manager.dict()
-        self.firmware_stats = self.manager.dict()
         self.currently_running_lock = self.manager.Lock()  # pylint: disable=no-member
 
         self.db_backend_service = db_interface if db_interface else BackEndDbInterface(config=config)
@@ -189,7 +189,6 @@ class AnalysisScheduler:  # pylint: disable=too-many-instance-attributes
 
     def _get_current_analyses_stats(self):
         analyses_data = {}
-        self.currently_running_lock.acquire()
         for uid, stats_dict in self.currently_running.items():
             result = {
                 "unpacked_count": stats_dict['unpacked_files_count'],
@@ -198,10 +197,8 @@ class AnalysisScheduler:  # pylint: disable=too-many-instance-attributes
                 "total_count": stats_dict['total_files_count'],
                 "finished": False,
                 "hid": stats_dict['hid']}
-            self.firmware_stats[uid] = result
             self.db_backend_service.firmwares.update_one({'_id': uid}, {'$set': {"analyses_stats": result}})
             analyses_data[uid] = result
-        self.currently_running_lock.release()
         return analyses_data
 
     def register_plugin(self, name, plugin_instance):
@@ -506,15 +503,16 @@ class AnalysisScheduler:  # pylint: disable=too-many-instance-attributes
         }
 
     def _update_firmware_stat(self, parent, analysis_data: dict) -> dict:
-        result = self.firmware_stats[parent]
-        result["total_count"] = analysis_data['total_files_count']
-        result["analyzed_count"] = analysis_data['analyzed_files_count']
-        result["duration"] = time() - analysis_data['start_time']
-        result["time_finished"] = time()
-        result["finished"] = True
-        self.firmware_stats[parent] = result
+        firmware = self.db_backend_service.firmwares.find_one(parent)
+        result = {}
+        if firmware:
+            result = firmware["analyses_stats"]
+            result["total_count"] = analysis_data['total_files_count']
+            result["analyzed_count"] = analysis_data['analyzed_files_count']
+            result["duration"] = time() - analysis_data['start_time']
+            result["time_finished"] = time()
+            result["finished"] = True
         self.db_backend_service.firmwares.update_one({'_id': parent}, {'$set': {"analyses_stats": result}})
-        self.firmware_stats.pop(parent)
 
 
     def _find_currently_analyzed_parents(self, fw_object: Union[Firmware, FileObject]) -> Set[str]:

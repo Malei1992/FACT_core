@@ -68,7 +68,9 @@ class AnalysisPlugin(AnalysisBasePlugin):
     def _run_cwe_checker_in_docker(file_object):
         return run_docker_container(DOCKER_IMAGE, timeout=TIMEOUT_IN_SECONDS,
                                     command='/input --json --quiet',
-                                    mount=('/input', file_object.file_path))
+                                    mount=('/input', file_object.file_path),
+                                    mem_limit="2g"
+                                    )
 
     @staticmethod
     def _parse_cwe_checker_output(output):
@@ -96,6 +98,10 @@ class AnalysisPlugin(AnalysisBasePlugin):
 
     def _do_full_analysis(self, file_object):
         output = self._run_cwe_checker_in_docker(file_object)
+        try:
+            json.loads(output)
+        except Exception:
+            output = str([])
         if output is not None:
             try:
                 cwe_messages = self._parse_cwe_checker_output(output)
