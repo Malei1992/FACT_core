@@ -14,6 +14,7 @@ from web_interface.rest.rest_firmware import api as firmware_api
 from web_interface.rest.rest_missing_analyses import api as missing_analyses_api
 from web_interface.rest.rest_statistics import api as statistics_api
 from web_interface.rest.rest_status import api as status_api
+from web_interface.rest.rest_cve_update import api as cve_api
 
 
 class RestBase:
@@ -31,6 +32,7 @@ class RestBase:
         self.pass_config_and_add_namespace(statistics_api, config)
         self.pass_config_and_add_namespace(status_api, config)
         self.pass_config_and_add_namespace(missing_analyses_api, config)
+        self.pass_config_and_add_namespace(cve_api, config)
 
         self._wrap_response(self.api)
 

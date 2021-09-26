@@ -11,6 +11,7 @@ from helperFunctions.mongo_task_conversion import convert_analysis_task_to_fw_ob
 from helperFunctions.object_conversion import create_meta_dict
 from intercom.front_end_binding import InterComFrontEndBinding
 from objects.firmware import Firmware
+from storage.db_interface_admin import AdminDbInterface
 from storage.db_interface_frontend import FrontEndDbInterface
 from web_interface.rest.helper import (
     error_message, get_boolean_from_request, get_paging, get_query, get_update, success_message
@@ -126,7 +127,28 @@ class RestFirmwareGetWithUid(RestResourceBase):
     @roles_accepted(*PRIVILEGES['view_analysis'])
     @api.doc(
         responses={200: 'Success', 400: 'Unknown UID'},
-        params={'summary': {'description': 'include summary in result', 'in': 'query', 'type': 'boolean', 'default': 'false'}}
+        params={'delete_local': {'description': 'Whether to delete a local file', 'in': 'query', 'type': 'boolean',
+                                 'default': 'true'}}
+    )
+    def delete(self, uid):
+        """
+        Delete a firmware
+        :param uid:
+        :return:
+        """
+        delete_local = get_boolean_from_request(request.args, 'delete_local')
+        with ConnectTo(FrontEndDbInterface, config=self.config) as sc:
+            if not sc.is_firmware(uid):
+                return error_message(f'Firmware not found in database: {uid}', self.URL, request_data=dict(uid=uid))
+        with ConnectTo(AdminDbInterface, config=self.config) as sc:
+            removed_fp, deleted = sc.delete_firmware(uid, delete_root_file=delete_local)
+        return success_message(dict(removed_fp=removed_fp, deleted=deleted), self.URL, request_data=dict(uid=uid))
+
+    @roles_accepted(*PRIVILEGES['view_analysis'])
+    @api.doc(
+        responses={200: 'Success', 400: 'Unknown UID'},
+        params={'summary': {'description': 'include summary in result', 'in': 'query', 'type': 'boolean',
+                            'default': 'false'}}
     )
     def get(self, uid):
         '''
@@ -135,8 +157,12 @@ class RestFirmwareGetWithUid(RestResourceBase):
         '''
         summary = get_boolean_from_request(request.args, 'summary')
         if summary:
-            with ConnectTo(FrontEndDbInterface, self.config) as connection:
-                firmware = connection.get_complete_object_including_all_summaries(uid)
+            try:
+                with ConnectTo(FrontEndDbInterface, self.config) as connection:
+                    firmware = connection.get_complete_object_including_all_summaries(uid)
+            except Exception as e:
+                logging.error(e)
+                firmware = None
         else:
             with ConnectTo(FrontEndDbInterface, self.config) as connection:
                 firmware = connection.get_firmware(uid)

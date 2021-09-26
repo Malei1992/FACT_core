@@ -29,6 +29,7 @@ class WebFrontEnd:
     def _setup_app(self):
         self.app = Flask(__name__)
         self.app.config.from_object(__name__)
+        self.app.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         Flask.secret_key = os.urandom(24)
         user_db, user_interface = add_flask_security_to_app(self.app, self.config)

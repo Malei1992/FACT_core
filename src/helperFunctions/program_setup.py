@@ -70,7 +70,7 @@ def _get_console_output_level(debug_flag):
 
 def _setup_logging(config, args, component=None):
     log_level = getattr(logging, config['Logging']['logLevel'], None)
-    log_format = dict(fmt='[%(asctime)s][%(module)s][%(levelname)s]: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    log_format = dict(fmt='[%(asctime)s][%(filename)s:%(lineno)d][%(module)s][%(levelname)s]: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
 

@@ -21,45 +21,12 @@ elif [ -z "${CODENAME}" ]; then
 fi
 
 echo "Install Pre-Install Requirements"
-sudo apt-get -y install python3-pip git libffi-dev
+#sudo apt-get -y install python3-pip git libffi-dev
 
 # Install packages to allow apt to use a repository over HTTPS
-sudo apt-get -y install apt-transport-https ca-certificates curl software-properties-common
+#sudo apt-get -y install apt-transport-https ca-certificates curl software-properties-common
 
 echo "Installing Docker"
-
-if [ "${CODENAME}" = "focal" ]
-then
-	sudo apt-get -y install docker-compose docker.io
-else
-	# Uninstall old versions
-	sudo apt-get -y remove docker docker-engine docker.io
-	
-	if [ "${CODENAME}" = "stretch" ] || [ "${CODENAME}" = "buster" ]
-	then
-	    # Add Docker’s official GPG key
-	    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-	
-	    # set up the stable repository
-	    if [ ! -f /etc/apt/sources.list.d/docker.list ]
-	    then
-	        echo "deb [arch=amd64] https://download.docker.com/linux/debian ${CODENAME} stable" > docker.list
-	        sudo mv docker.list /etc/apt/sources.list.d/docker.list
-	    fi
-	else
-	    # Add Docker’s official GPG key
-	    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-	
-	    # set up the stable repository
-	    if  ! grep -q "^deb .*download.docker.com/linux/ubuntu" /etc/apt/sources.list /etc/apt/sources.list.d/*
-	    then
-	        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $CODENAME stable"
-	    fi
-	fi
-	# install docker
-	sudo apt-get update
-	sudo apt-get -y install docker-ce
-fi
 
 sudo systemctl enable docker
 
@@ -76,9 +43,9 @@ then
   exit 1
 fi
 
-sudo -EH pip3 install --upgrade pip
+#sudo -EH pip3 install --upgrade pip
 
-sudo -EH pip install -r ./requirements_pre_install.txt
+#sudo -EH pip install -r ./requirements_pre_install.txt
 
 echo -e "Pre-Install-Routine complete! \\033[31mPlease reboot before running install.py\\033[0m"
 

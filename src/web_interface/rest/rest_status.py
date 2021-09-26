@@ -1,7 +1,10 @@
 from flask_restx import Namespace
 
+from helperFunctions import uid
 from helperFunctions.database import ConnectTo
 from intercom.front_end_binding import InterComFrontEndBinding
+from objects.firmware import Firmware
+from storage.db_interface_frontend import FrontEndDbInterface
 from storage.db_interface_statistic import StatisticDbViewer
 from web_interface.rest.helper import error_message, success_message
 from web_interface.rest.rest_resource_base import RestResourceBase
@@ -49,3 +52,24 @@ class RestStatus(RestResourceBase):
             plugins[name] = dict(description=description, version=version)
 
         return plugins
+
+
+@api.route('/<string:uid>', doc={'description': '', 'params': {'uid': 'Firmware UID'}})
+class RestStatusGetWithUid(RestResourceBase):
+    URL = '/rest/status'
+
+    @roles_accepted(*PRIVILEGES['status'])
+    @api.doc(responses={200: 'Success', 400: 'Unknown UID'})
+    def get(self, uid):
+        with ConnectTo(FrontEndDbInterface, self.config) as connection:
+            firmware = connection.firmwares.find_one(uid)
+        if not firmware:
+            return error_message(f'No firmware with UID {uid} found', self.URL, dict(uid=uid))
+        filter_firware = {}
+        filter_firware["uid"] = firmware['_id']
+        filter_firware["size"] = firmware['size']
+        filter_firware["file_name"] = firmware['file_name']
+        filter_firware["device_name"] = firmware['device_name']
+        filter_firware["device_class"] = firmware['device_class']
+        filter_firware["analyses_stats"] = firmware['analyses_stats']
+        return success_message(dict(firmware=filter_firware), self.URL, request_data=dict(uid=uid))

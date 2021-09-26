@@ -51,7 +51,7 @@ class RestComparePut(RestResourceBase):
         with ConnectTo(InterComFrontEndBinding, self.config) as intercom:
             intercom.add_compare_task(compare_id, force=data['redo'])
         return success_message(
-            {'message': 'Compare started. Please use GET to get the results.'},
+            {'message': 'Compare started. Please use GET to get the results.', "compare_id": compare_id},
             self.URL, request_data=request.json, return_code=202
         )
 
@@ -65,6 +65,33 @@ class RestComparePut(RestResourceBase):
 )
 class RestCompareGet(RestResourceBase):
     URL = '/rest/compare'
+
+    @roles_accepted(*PRIVILEGES['compare'])
+    @api.doc(responses={200: 'Success', 400: 'Unknown comparison ID'})
+    def delete(self, compare_id):
+        """
+        Delete results from a comparisons
+        :param compare_id:
+        :return:
+        """
+        try:
+            self._validate_compare_id(compare_id)
+            compare_id = normalize_compare_id(compare_id)
+        except (TypeError, ValueError) as error:
+            return error_message(
+                f'Compare ID must be of the form uid1;uid2(;uid3..): {error}',
+                self.URL, request_data={'compare_id': compare_id}
+            )
+
+        with ConnectTo(CompareDbInterface, self.config) as db_compare_service:
+            with suppress(FactCompareException):
+                if db_compare_service.compare_result_is_in_db(compare_id):
+                    try:
+                        db_compare_service.compare_results.remove({'_id': compare_id})
+                        return success_message({}, self.URL, dict(compare_id=compare_id))
+                    except Exception:
+                        return error_message('删除失败', self.URL, dict(compare_id=compare_id))
+        return error_message('compare_id 不存在', self.URL, dict(compare_id=compare_id), 404)
 
     @roles_accepted(*PRIVILEGES['compare'])
     @api.doc(responses={200: 'Success', 400: 'Unknown comparison ID'})
@@ -91,7 +118,8 @@ class RestCompareGet(RestResourceBase):
                     result = db_compare_service.get_compare_result(compare_id)
         if result:
             return success_message(result, self.URL, request_data={'compare_id': compare_id}, return_code=202)
-        return error_message('Compare not found in database. Please use /rest/start_compare to start the compare.', self.URL, request_data={'compare_id': compare_id}, return_code=404)
+        return error_message('Compare not found in database. Please use /rest/start_compare to start the compare.',
+                             self.URL, request_data={'compare_id': compare_id}, return_code=404)
 
     @staticmethod
     def _validate_compare_id(compare_id: str):

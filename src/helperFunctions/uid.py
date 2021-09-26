@@ -1,4 +1,5 @@
 import re
+import time
 from typing import AnyStr, List, Set, Union
 
 from helperFunctions.data_conversion import make_bytes
@@ -14,7 +15,8 @@ def create_uid(input_data: bytes) -> str:
     '''
     hash_value = get_sha256(input_data)
     size = len(make_bytes(input_data))
-    return '{}_{}'.format(hash_value, size)
+    ts = int(time.time() * 10000)
+    return '{}_{}_{}'.format(hash_value, size, ts)
 
 
 def is_uid(input_string: AnyStr) -> bool:
@@ -26,7 +28,7 @@ def is_uid(input_string: AnyStr) -> bool:
     '''
     if not isinstance(input_string, str):
         return False
-    match = re.match(r'[a-f0-9]{64}_[0-9]+', input_string)
+    match = re.match(r'^[a-f0-9]{64}_[0-9]+_[0-9]+$', input_string)
     if match:
         if match.group(0) == input_string:
             return True

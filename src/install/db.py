@@ -38,15 +38,6 @@ def _add_mongo_mirror(distribution):
 def main(distribution):
     logging.info('Setting up mongo database')
 
-    if distribution == 'debian':
-        _add_mongo_mirror(distribution)
-        apt_update_sources()
-        apt_install_packages('mongodb-org')
-    elif distribution == 'fedora':
-        dnf_install_packages('mongodb-org-3.6.8')
-    else:
-        apt_install_packages('mongodb')
-
     # creating DB directory
     fact_db_directory = _get_db_directory()
     mkdir_output, _ = execute_shell_command_get_return_code('sudo mkdir -p --mode=0744 {}'.format(fact_db_directory))

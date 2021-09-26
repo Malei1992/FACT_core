@@ -162,19 +162,19 @@ def _install_docker_images(radare):
 
 
 def main(skip_docker, radare, nginx):
-    run_cmd_with_logging("sudo -EH pip3 install -r ./requirements_frontend.txt")
-
-    # installing web/js-frameworks
-    _install_css_and_js_files()
-
-    # create user database
+    # run_cmd_with_logging("sudo -EH pip3 install -r ./requirements_frontend.txt")
+    #
+    # # installing web/js-frameworks
+    # _install_css_and_js_files()
+    #
+    # # create user database
     _create_directory_for_authentication()
-
-    if nginx:
-        _install_nginx()
-
-    if not skip_docker:
-        _install_docker_images(radare)
+    #
+    # if nginx:
+    #     _install_nginx()
+    #
+    # if not skip_docker:
+    #     _install_docker_images(radare)
 
     with OperateInDirectory('../../'):
         with suppress(FileNotFoundError):

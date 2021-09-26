@@ -10,7 +10,7 @@ from requests.exceptions import ReadTimeout
 
 def run_docker_container(  # pylint: disable=too-many-arguments
     image: str, timeout: int = 300, command: Optional[str] = None, reraise: bool = False, privileged: bool = False,
-    mount: Optional[Tuple[str, str]] = None, label: str = 'Docker', include_stderr: bool = True
+    mount: Optional[Tuple[str, str]] = None, label: str = 'Docker', include_stderr: bool = True, mem_limit: str = "1g"
 ) -> str:
     '''
     Run a docker container and get its output.
@@ -30,7 +30,7 @@ def run_docker_container(  # pylint: disable=too-many-arguments
     try:
         kwargs = {'mounts': [Mount(*mount, read_only=False, type='bind')]} if mount else {}
         client = docker.from_env()
-        container = client.containers.run(image, command=command, network_disabled=True, detach=True, privileged=privileged, **kwargs)
+        container = client.containers.run(image, command=command, network_disabled=True, detach=True, privileged=privileged, mem_limit=mem_limit, **kwargs)
         container.wait(timeout=timeout)
         return container.logs(stderr=include_stderr).decode()
     except ReadTimeout:
